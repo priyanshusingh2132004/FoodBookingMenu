@@ -1,36 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🍽️ Restro Menu Book (SaaS)
 
-## Getting Started
+A modern, dynamic Kitchen Display System (KDS) and QR-code Dine-in Ordering platform built for restaurants.
 
-First, run the development server:
+This full-stack SaaS application replaces paper menus with a beautiful digital storefront and replaces paper order tickets with a real-time digital Kitchen Display System. 
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Restaurant owners can fully customize their catalog using a secured Admin panel, meaning **zero code changes are required** to onboard a new restaurant.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## ✨ Features
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 📱 1. Customer Frontend (`/menu`)
+- **QR Code Ready**: Designed to be scanned directly from a table (e.g., `?table=12`).
+- **Dynamic Catalog**: Menu items are fetched live from the database.
+- **Cart & Total Calculation**: Users can add, remove, and review items before placing an order.
+- **Cooking Instructions**: Dedicated field for customers to leave allergy notes or spice preferences.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 👨‍🍳 2. Kitchen Display System (`/kds`)
+- **Real-time Sync**: Orders appear instantly on the chef's screen via Firebase `onSnapshot`.
+- **Multi-stage Pipeline**: 
+  - 🟡 **START PREPARING**: Acknowledges the order.
+  - 🔵 **FOOD READY**: Signals to the waitstaff that the food is plated.
+  - 🟢 **MARK AS SERVED**: Clears the ticket from the active queue.
+- **Live Timers**: Tracks exactly how many minutes ago an order was placed.
 
-## Learn More
+### ⚙️ 3. Owner Admin Panel (`/admin`)
+- **Zero-Code Management**: Restaurant owners can add menus, update prices, and upload photos directly from their browser.
+- **1-Click Demo Data**: Instantly seed the database with starter items for quick onboarding.
 
-To learn more about Next.js, take a look at the following resources:
+## 🚀 Tech Stack
+- **Framework**: Next.js 15 (App Router)
+- **Styling**: Tailwind CSS
+- **Icons**: Lucide React
+- **Database Backend**: Firebase Firestore (NoSQL, Real-time WebSockets)
+- **Deployment**: Vercel (Recommended)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🛠️ Local Setup
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/nawab-dhabha.git
+   cd nawab-dhabha
+   ```
 
-## Deploy on Vercel
+2. **Install Dependencies**
+   ```bash
+   npm install
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+3. **Configure Firebase**
+   - Create a project at [console.firebase.google.com](https://console.firebase.google.com)
+   - Enable **Firestore Database** in Test Mode (`allow read, write: if true;`).
+   - Copy your Firebase config into a `.env.local` file at the root of the project:
+     ```env
+     NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
+     NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
+     NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+     NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project_id.appspot.com
+     NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+     NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+     ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+4. **Run the Development Server**
+   ```bash
+   npm run dev
+   ```
+
+5. **Seed the Database**
+   - Open `http://localhost:3000/admin` in your browser.
+   - Click the red **"Load Demo Data"** button to populate Firestore with the starter menu.
+
+## 📄 License
+This project is open-source and available under the MIT License.
