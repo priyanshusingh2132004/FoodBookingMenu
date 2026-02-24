@@ -16,9 +16,14 @@ export default function AdminDashboard() {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [price, setPrice] = useState('');
-    const [image, setImage] = useState('');
     const [category, setCategory] = useState('');
     const [isVeg, setIsVeg] = useState(true);
+    const [inStock, setInStock] = useState(true);
+
+    // Image Upload State
+    const [file, setFile] = useState<File | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
 
     const fetchItems = async () => {
         setIsLoading(true);
@@ -45,6 +50,34 @@ export default function AdminDashboard() {
         e.preventDefault();
         if (!name || !price || !category) return alert("Please fill in Name, Price, and Category");
 
+        let finalImageUrl = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&q=80'; // Default fallback
+
+        // Upload image to Cloudinary if file exists
+        if (file) {
+            setIsUploading(true);
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('upload_preset', 'restro_menu_uploads'); // Requires an unsigned preset named this in Cloudinary
+
+                // Using a generic public cloudinary cloud name for demo/testing purposes
+                const res = await fetch('https://api.cloudinary.com/v1_1/diek2uquu/image/upload', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                const data = await res.json();
+                if (data.secure_url) {
+                    finalImageUrl = data.secure_url;
+                }
+            } catch (err) {
+                console.error("Image upload failed:", err);
+                alert("Image upload failed. Proceeding with default image.");
+            } finally {
+                setIsUploading(false);
+            }
+        }
+
         try {
             const newRef = doc(collection(db, 'menu_items'));
             const newItem: MenuItem = {
@@ -52,9 +85,10 @@ export default function AdminDashboard() {
                 name,
                 description,
                 price: Number(price),
-                image: image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&q=80',
+                image: finalImageUrl,
                 isVeg,
-                category
+                category,
+                inStock
             };
 
             await setDoc(newRef, newItem);
@@ -64,8 +98,9 @@ export default function AdminDashboard() {
             setName('');
             setDescription('');
             setPrice('');
-            setImage('');
+            setFile(null);
             setCategory('');
+            setInStock(true);
 
             fetchItems();
         } catch (error) {
@@ -82,6 +117,16 @@ export default function AdminDashboard() {
         } catch (error) {
             console.error("Error deleting item:", error);
             alert("Failed to delete item.");
+        }
+    };
+
+    const toggleStock = async (id: string, currentStatus: boolean | undefined) => {
+        try {
+            await setDoc(doc(db, 'menu_items', id), { inStock: currentStatus === false ? true : false }, { merge: true });
+            fetchItems();
+        } catch (error) {
+            console.error("Error updating stock status:", error);
+            alert("Failed to update stock status.");
         }
     };
 
@@ -159,16 +204,36 @@ export default function AdminDashboard() {
                                 <textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-red-100" placeholder="A short description of the dish..." />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Image URL</label>
-                                <input value={image} onChange={e => setImage(e.target.value)} type="url" className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-red-100" placeholder="https://..." />
+                                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Image Upload</label>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={e => setFile(e.target.files?.[0] || null)}
+                                    className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-red-100 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100"
+                                />
+                                {file && <p className="text-xs text-gray-500 mt-1 pl-1">Selected: {file.name}</p>}
                             </div>
-                            <div className="flex items-center gap-2 pt-2">
-                                <input type="checkbox" id="isVeg" checked={isVeg} onChange={e => setIsVeg(e.target.checked)} className="w-4 h-4 text-green-600 rounded border-gray-300 focus:ring-green-500" />
-                                <label htmlFor="isVeg" className="text-sm font-medium text-gray-700">Vegetarian Item</label>
+                            <div className="flex items-center gap-6 pt-2">
+                                <div className="flex items-center gap-2">
+                                    <input type="checkbox" id="isVeg" checked={isVeg} onChange={e => setIsVeg(e.target.checked)} className="w-4 h-4 text-green-600 rounded border-gray-300 focus:ring-green-500" />
+                                    <label htmlFor="isVeg" className="text-sm font-medium text-gray-700">Vegetarian Item</label>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <input type="checkbox" id="inStock" checked={inStock} onChange={e => setInStock(e.target.checked)} className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500" />
+                                    <label htmlFor="inStock" className="text-sm font-medium text-gray-700">In Stock</label>
+                                </div>
                             </div>
 
-                            <button type="submit" className="w-full mt-4 bg-red-600 text-white font-bold py-3 rounded-xl hover:bg-red-700 transition flex items-center justify-center gap-2">
-                                <Plus className="w-5 h-5" /> Add to Menu
+                            <button
+                                type="submit"
+                                disabled={isUploading}
+                                className={`w-full mt-4 text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2 ${isUploading ? 'bg-gray-400 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'}`}
+                            >
+                                {isUploading ? (
+                                    <><Loader2 className="w-5 h-5 animate-spin" /> Uploading Image...</>
+                                ) : (
+                                    <><Plus className="w-5 h-5" /> Add to Menu</>
+                                )}
                             </button>
                         </form>
                     </div>
@@ -197,8 +262,14 @@ export default function AdminDashboard() {
                                             <p className="font-semibold text-red-600 mt-1">₹{item.price}</p>
                                         </div>
                                         <button
+                                            onClick={() => toggleStock(item.id, item.inStock)}
+                                            className={`px-3 py-1.5 text-xs font-bold rounded-lg transition ${item.inStock !== false ? 'bg-blue-50 text-blue-700 hover:bg-blue-100 ring-1 ring-blue-200' : 'bg-gray-100 text-gray-500 hover:bg-gray-200 ring-1 ring-gray-300'}`}
+                                        >
+                                            {item.inStock !== false ? 'In Stock' : 'Out of Stock'}
+                                        </button>
+                                        <button
                                             onClick={() => handleDelete(item.id)}
-                                            className="p-3 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition"
+                                            className="p-3 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition ml-2"
                                         >
                                             <Trash2 className="w-5 h-5" />
                                         </button>

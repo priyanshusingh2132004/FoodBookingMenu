@@ -1,6 +1,6 @@
 "use client";
 
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useMemo, useEffect, Suspense } from 'react';
 import { useCart } from '@/context/CartContext';
 import { MenuItem } from '@/types';
@@ -9,6 +9,7 @@ import { db } from '@/lib/firebase';
 import { collection, doc, setDoc, getDocs, serverTimestamp } from 'firebase/firestore';
 
 function MenuContent() {
+    const router = useRouter();
     const searchParams = useSearchParams();
     const tableId = searchParams.get('table') || 'Takeaway';
 
@@ -96,14 +97,14 @@ function MenuContent() {
             ]);
 
             console.log('Order placed successfully for table:', tableId);
-            alert('Order placed successfully! The kitchen has received it.');
 
-            setTimeout(() => {
-                clearCart();
-                setInstructions('');
-                setIsCartOpen(false);
-                window.scrollTo(0, 0);
-            }, 1000);
+            // Clear cart & state instantly
+            clearCart();
+            setInstructions('');
+            setIsCartOpen(false);
+
+            // Redirect seamlessly to the live tracker
+            router.push(`/menu/tracker/${newOrderRef.id}`);
 
         } catch (e) {
             console.error('Error placing order', e);
@@ -215,9 +216,13 @@ function MenuContent() {
                                 </div>
 
                                 <div className="relative w-[110px] h-[110px] shrink-0">
-                                    <img src={item.image} alt={item.name} className="w-full h-full object-cover rounded-xl shadow-sm" />
+                                    <img src={item.image} alt={item.name} className={`w-full h-full object-cover rounded-xl shadow-sm ${item.inStock === false ? 'grayscale opacity-50' : ''}`} />
                                     <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-white rounded-lg shadow-md border border-gray-100 overflow-hidden w-[90%]">
-                                        {qty === 0 ? (
+                                        {item.inStock === false ? (
+                                            <div className="w-full py-1.5 text-gray-400 font-bold text-[10px] tracking-wide bg-gray-50 text-center uppercase">
+                                                Out of Stock
+                                            </div>
+                                        ) : qty === 0 ? (
                                             <button
                                                 onClick={() => addToCart(item)}
                                                 className="w-full py-1.5 text-red-600 font-bold text-sm tracking-wide bg-white hover:bg-gray-50"

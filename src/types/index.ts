@@ -9,6 +9,7 @@ export interface MenuItem {
     isVeg: boolean;
     category: string;
     badge?: BadgeType;
+    inStock?: boolean;
 }
 
 export interface CartItem extends MenuItem {

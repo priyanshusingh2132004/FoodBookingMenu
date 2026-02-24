@@ -13,8 +13,7 @@ export default function KDSPage() {
     useEffect(() => {
         const q = query(
             collection(db, 'live_orders'),
-            where('status', 'in', ['live', 'preparing', 'ready']),
-            orderBy('timestamp', 'asc')
+            where('status', 'in', ['live', 'preparing', 'ready'])
         );
 
         const unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -22,6 +21,14 @@ export default function KDSPage() {
                 id: doc.id,
                 ...doc.data()
             })) as Order[];
+
+            // Sort client-side to avoid composite index requirement
+            liveOrders.sort((a, b) => {
+                const timeA = a.timestamp && (a.timestamp as any).toDate ? (a.timestamp as any).toDate().getTime() : new Date(a.timestamp as string).getTime();
+                const timeB = b.timestamp && (b.timestamp as any).toDate ? (b.timestamp as any).toDate().getTime() : new Date(b.timestamp as string).getTime();
+                return timeA - timeB;
+            });
+
             setOrders(liveOrders);
         });
 
