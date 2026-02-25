@@ -37,8 +37,8 @@ Restaurant owners can fully customize their catalog using a secured Admin panel,
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/nawab-dhabha.git
-   cd nawab-dhabha
+   git clone https://github.com/yourusername/FoodBookingMenu.git
+   cd FoodBookingMenu
    ```
 
 2. **Install Dependencies**
