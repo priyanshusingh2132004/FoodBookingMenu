@@ -20,6 +20,13 @@ console.log("Firebase Config Initialization:", {
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
 // Force long-polling to prevent WebSocket connection hanging in dev environments
-export const db = !getApps().length
-  ? initializeFirestore(app, { experimentalForceLongPolling: true })
-  : getFirestore(app);
+let firestoreDb;
+try {
+  firestoreDb = initializeFirestore(app, { experimentalForceLongPolling: true });
+} catch {
+  firestoreDb = getFirestore(app);
+}
+export const db = firestoreDb;
+
+import { getAuth } from "firebase/auth";
+export const auth = getAuth(app);

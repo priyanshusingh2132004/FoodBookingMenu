@@ -57,7 +57,7 @@ function MenuContent() {
             const matchesVeg = vegOnly ? item.isVeg : true;
             return matchesCategory && matchesSearch && matchesVeg;
         });
-    }, [activeCategory, searchQuery, vegOnly]);
+    }, [menuItems, activeCategory, searchQuery, vegOnly]);
 
     const placeOrder = async (e?: React.MouseEvent) => {
         if (e) e.preventDefault();
@@ -295,7 +295,7 @@ function MenuContent() {
                             ) : (
                                 cartItems.map((item) => (
                                     <div key={item.id} className="flex gap-4">
-                                        <div className="w-4 h-4 shrink-0 mt-1 rounded-sm border flex items-center justify-center border-green-600">
+                                        <div className={`w-4 h-4 shrink-0 mt-1 rounded-sm border flex items-center justify-center ${item.isVeg ? 'border-green-600' : 'border-red-600'}`}>
                                             {item.isVeg && <div className="w-2 h-2 rounded-full bg-green-600"></div>}
                                             {!item.isVeg && <div className="w-2 h-2 rounded-full bg-red-600" style={{ backgroundColor: 'red', borderColor: 'red' }}></div>}
                                         </div>

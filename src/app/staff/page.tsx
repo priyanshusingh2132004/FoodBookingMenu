@@ -4,21 +4,25 @@ import { useState, useEffect } from 'react';
 import { db } from '@/lib/firebase';
 import { collection, query, orderBy, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { Order, OrderStatus } from '@/types';
-import {
-    Users,
-    TrendingUp,
-    ShoppingBag,
-    XCircle,
-    UtensilsCrossed,
-    Clock,
-    CheckCircle2
-} from 'lucide-react';
+import { LogOut, Users, TrendingUp, ShoppingBag, XCircle, UtensilsCrossed, Clock, CheckCircle2, Loader2 } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
 
 export default function StaffPanel() {
+    const { user, role, loading: authLoading, logout } = useAuth();
+    const router = useRouter();
     const [orders, setOrders] = useState<Order[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
+        if (!authLoading && (!user || (role !== 'staff' && role !== 'admin'))) {
+            router.replace('/login/staff');
+        }
+    }, [user, role, authLoading, router]);
+
+    useEffect(() => {
+        if (!user || (role !== 'staff' && role !== 'admin')) return;
+
         const q = query(
             collection(db, 'live_orders'),
             orderBy('timestamp', 'desc')
@@ -34,7 +38,12 @@ export default function StaffPanel() {
         });
 
         return () => unsubscribe();
-    }, []);
+    }, [user, role]);
+
+    const handleLogout = async () => {
+        await logout();
+        router.push('/login');
+    };
 
     const handleCancelOrder = async (orderId: string) => {
         if (!confirm("Are you sure you want to cancel this order? This cannot be undone.")) return;
@@ -81,7 +90,7 @@ export default function StaffPanel() {
     const totalOrders = orders.length;
     const activeOrders = orders.filter(o => ['live', 'preparing', 'ready'].includes(o.status)).length;
 
-    // Calculate total revenue from non-cancelled orders using reduce
+    // Calculate total revenue from non-cancelled orders
     const totalRevenue = orders
         .filter(o => o.status !== 'cancelled')
         .reduce((sum, order) => sum + (order.total || 0), 0);
@@ -96,6 +105,17 @@ export default function StaffPanel() {
             default: return 'bg-gray-100 text-gray-800 border-gray-200';
         }
     };
+
+    if (authLoading || (!user && !isLoading)) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="flex flex-col items-center">
+                    <Loader2 className="w-10 h-10 text-blue-600 animate-spin mb-4" />
+                    <p className="text-gray-500 font-medium">Verifying Access...</p>
+                </div>
+            </div>
+        );
+    }
 
     if (isLoading) {
         return (
@@ -129,6 +149,13 @@ export default function StaffPanel() {
                             </span>
                             Live System Active
                         </div>
+                        <button
+                            onClick={handleLogout}
+                            className="p-2.5 text-red-600 hover:bg-red-50 rounded-lg transition border border-transparent hover:border-red-100"
+                            title="Sign Out"
+                        >
+                            <LogOut className="w-5 h-5" />
+                        </button>
                     </div>
                 </div>
 
