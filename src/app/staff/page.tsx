@@ -42,7 +42,7 @@ export default function StaffPanel() {
 
     const handleLogout = async () => {
         await logout();
-        router.push('/login');
+        router.push('/login/staff');
     };
 
     const handleCancelOrder = async (orderId: string) => {
@@ -54,7 +54,7 @@ export default function StaffPanel() {
                 status: 'cancelled'
             });
         } catch (error) {
-            console.error("Error cancelling order:", error);
+            // silent
             alert("Failed to cancel order. Check Firebase permissions.");
         }
     };
@@ -66,7 +66,7 @@ export default function StaffPanel() {
                 status: 'served'
             });
         } catch (error) {
-            console.error("Error updating order:", error);
+            // silent
             alert("Failed to mark order as served.");
         }
     };
@@ -81,7 +81,7 @@ export default function StaffPanel() {
             const orderRef = doc(db, 'live_orders', orderId);
             await updateDoc(orderRef, { status: nextStatus });
         } catch (error) {
-            console.error("Error updating order:", error);
+            // silent
             alert("Failed to update status.");
         }
     };
@@ -92,7 +92,7 @@ export default function StaffPanel() {
 
     // Calculate total revenue from non-cancelled orders
     const totalRevenue = orders
-        .filter(o => o.status !== 'cancelled')
+        .filter(o => o.status === 'served')
         .reduce((sum, order) => sum + (order.total || 0), 0);
 
     const getStatusStyles = (status: OrderStatus) => {

@@ -23,7 +23,6 @@ function OrderTrackerContent() {
             return;
         }
 
-        console.log(`Setting up real-time listener for order: ${orderId}`);
         const orderRef = doc(db, 'live_orders', orderId);
 
         const unsubscribe = onSnapshot(orderRef,

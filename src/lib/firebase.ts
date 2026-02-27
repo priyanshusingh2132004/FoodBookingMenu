@@ -11,12 +11,6 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
-console.log("Firebase Config Initialization:", {
-  projectId: firebaseConfig.projectId,
-  hasApiKey: !!firebaseConfig.apiKey,
-  authDomain: firebaseConfig.authDomain
-});
-
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
 // Force long-polling to prevent WebSocket connection hanging in dev environments

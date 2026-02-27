@@ -30,7 +30,7 @@ export default function AdminDashboard() {
 
     const handleLogout = async () => {
         await logout();
-        router.push('/login');
+        router.push('/login/admin');
     };
 
     // ----- MENU MANAGEMENT STATE -----
@@ -79,7 +79,7 @@ export default function AdminDashboard() {
                     setNewTableCount(String(settingsSnap.data().totalTables || 0));
                 }
             } catch (error) {
-                console.error("Error fetching admin data:", error);
+                // silent
             } finally {
                 setIsLoading(false);
             }
@@ -117,7 +117,7 @@ export default function AdminDashboard() {
 
             setCompletedOrders(fetchedOrders);
         } catch (error) {
-            console.error("Error fetching sales:", error);
+            // silent
         } finally {
             setIsFetchingSales(false);
         }
@@ -136,7 +136,7 @@ export default function AdminDashboard() {
                 const formData = new FormData();
                 formData.append('file', file);
                 formData.append('upload_preset', 'restro_menu_uploads');
-                const res = await fetch('https://api.cloudinary.com/v1_1/diek2uquu/image/upload', {
+                const res = await fetch(`https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'diek2uquu'}/image/upload`, {
                     method: 'POST',
                     body: formData,
                 });
@@ -211,7 +211,7 @@ export default function AdminDashboard() {
             setTotalTables(count);
             alert("Table count updated!");
         } catch (error) {
-            console.error("Error setting table count:", error);
+            // silent
             alert("Failed to save table count.");
         } finally {
             setIsSavingTables(false);
@@ -273,7 +273,7 @@ export default function AdminDashboard() {
                 alert(`Failed to send email: ${data.error || 'Unknown error. Check App Password.'}`);
             }
         } catch (err) {
-            console.error(err);
+            // silent
             alert("Error sending email. Please check console.");
         } finally {
             setIsSendingEmail(false);
@@ -282,7 +282,7 @@ export default function AdminDashboard() {
 
 
 
-    if (authLoading || (!user && !isLoading)) {
+    if (authLoading || (!user && !isLoading) || (role !== 'admin' && !authLoading)) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                 <div className="flex flex-col items-center">

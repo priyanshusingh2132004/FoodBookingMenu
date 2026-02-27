@@ -14,7 +14,8 @@ import {
 function MenuContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const tableId = searchParams.get('table') || 'Takeaway';
+    const rawTable = searchParams.get('table') || 'Takeaway';
+    const tableId = (rawTable === 'Takeaway' || (/^\d+$/.test(rawTable) && parseInt(rawTable) > 0)) ? rawTable : 'Takeaway';
 
     const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
     const [categories, setCategories] = useState<string[]>([]);
@@ -102,7 +103,7 @@ function MenuContent() {
                 setCategories(categoryArray);
                 if (categoryArray.length > 0) setActiveCategory(categoryArray[0]);
             } catch (error) {
-                console.error("Error fetching menu:", error);
+                // silent fail
             } finally {
                 setIsLoading(false);
             }
@@ -146,7 +147,7 @@ function MenuContent() {
             setIsCartOpen(false);
             router.push(`/menu/tracker?orderId=${newOrderRef.id}`);
         } catch (e) {
-            console.error('Error placing order', e);
+            // order error
             alert('Failed to place order. Please check your Firebase connection.');
         }
     };
@@ -169,7 +170,7 @@ function MenuContent() {
             setJustSuggested(item.id);
             setTimeout(() => setJustSuggested(null), 2000);
         } catch (e) {
-            console.error('Error suggesting item', e);
+            // suggest error
         }
     };
 
@@ -281,7 +282,7 @@ function MenuContent() {
                     {categories.map((cat) => (
                         <button
                             key={cat}
-                            onClick={() => setActiveCategory(cat)}
+                            onClick={() => { setActiveCategory(cat); setSearchQuery(''); }}
                             className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${activeCategory === cat ? 'bg-red-600 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
                         >
                             {cat}
