@@ -1,23 +1,27 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useState, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { db } from '@/lib/firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { Order, OrderStatus } from '@/types';
 import { Loader2, ArrowLeft, CheckCircle2, ChefHat, Clock, CheckCircle } from 'lucide-react';
 
-export default function OrderTracker() {
-    const params = useParams();
+function OrderTrackerContent() {
+    const searchParams = useSearchParams();
     const router = useRouter();
-    const orderId = params.id as string;
+    const orderId = searchParams.get('orderId');
 
     const [order, setOrder] = useState<Order | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (!orderId) return;
+        if (!orderId) {
+            setError("No order ID provided.");
+            setIsLoading(false);
+            return;
+        }
 
         console.log(`Setting up real-time listener for order: ${orderId}`);
         const orderRef = doc(db, 'live_orders', orderId);
@@ -175,7 +179,7 @@ export default function OrderTracker() {
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                     <h3 className="font-bold text-gray-900 mb-4 pb-4 border-b border-gray-100">Order Details</h3>
                     <div className="space-y-4">
-                        {order.items.map((item, idx) => (
+                        {order.items.map((item: any, idx: number) => (
                             <div key={idx} className="flex justify-between items-start gap-4">
                                 <div className="flex items-start gap-3">
                                     <div className="w-5 h-5 shrink-0 mt-0.5 rounded-sm border flex items-center justify-center border-gray-200 font-bold text-xs bg-gray-50 text-gray-500 tracking-tighter">
@@ -205,5 +209,18 @@ export default function OrderTracker() {
 
             </div>
         </div>
+    );
+}
+
+export default function OrderTracker() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6 text-center">
+                <Loader2 className="w-12 h-12 text-red-600 animate-spin mb-4" />
+                <h2 className="text-xl font-bold text-gray-900 mb-2">Loading Tracker...</h2>
+            </div>
+        }>
+            <OrderTrackerContent />
+        </Suspense>
     );
 }
